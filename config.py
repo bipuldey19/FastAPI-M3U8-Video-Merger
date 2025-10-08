@@ -11,14 +11,14 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    WORKERS: int = 4
+    WORKERS: int = 2  # Reduced for ARM/free tier
     LOG_LEVEL: str = "INFO"
     
     # API settings
     ENABLE_DOCS: bool = False  # Disable in production
     API_PREFIX: str = "/api"
     RATE_LIMIT_PER_MINUTE: int = 10
-    MAX_VIDEOS_PER_REQUEST: int = 20
+    MAX_VIDEOS_PER_REQUEST: int = 10  # Reduced for free tier
     
     # Redis settings
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     # Video settings
     REELS_WIDTH: int = 1080
     REELS_HEIGHT: int = 1920
-    FFMPEG_PRESET: str = "medium"  # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
-    FFMPEG_CRF: int = 23  # 0-51, lower is better quality
+    FFMPEG_PRESET: str = "veryfast"  # Faster for ARM
+    FFMPEG_CRF: int = 28  # Slightly lower quality for performance
     
     # Security settings
     ALLOWED_ORIGINS: List[str] = ["*"]  # Configure for production
