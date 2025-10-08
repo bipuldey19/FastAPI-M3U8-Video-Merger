@@ -22,16 +22,11 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
 
   api:
     build:
       context: .
       dockerfile: Dockerfile
-      platforms:
-        - linux/arm64
     container_name: video_merger_api
     restart: unless-stopped
     ports:
@@ -57,15 +52,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
     deploy:
       resources:
         limits:
           cpus: '1.5'
           memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 1G
     networks:
       - video_merger_network
 
