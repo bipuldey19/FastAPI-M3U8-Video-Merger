@@ -2,69 +2,22 @@ version: '3.8'
 
 services:
   redis:
-    image: redis:7-alpine
-    container_name: video_merger_redis
+    image: redis:alpine
     restart: unless-stopped
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - video_merger_network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
+    command: redis-server --maxmemory 256mb
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: video_merger_api
+    build: .
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - DEBUG=false
-      - LOG_LEVEL=INFO
-      - WORKERS=2
-      - RATE_LIMIT_PER_MINUTE=10
-      - MAX_VIDEOS_PER_REQUEST=10
-      - FFMPEG_PRESET=veryfast
-      - FFMPEG_CRF=28
     volumes:
       - ./output:/app/output
       - ./logs:/app/logs
       - ./temp:/app/temp
     depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 90s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 2G
-    networks:
-      - video_merger_network
-
-volumes:
-  redis_data:
-    driver: local
-
-networks:
-  video_merger_network:
-    driver: bridge
+      - redis
