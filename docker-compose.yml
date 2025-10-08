@@ -4,12 +4,12 @@ services:
   redis:
     image: redis:7-alpine
     container_name: video_merger_redis
-    restart: always
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -17,20 +17,34 @@ services:
       retries: 5
     networks:
       - video_merger_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64
     container_name: video_merger_api
-    restart: always
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DEBUG=false
       - LOG_LEVEL=INFO
-      - WORKERS=4
+      - WORKERS=2
       - RATE_LIMIT_PER_MINUTE=10
-      - MAX_VIDEOS_PER_REQUEST=20
+      - MAX_VIDEOS_PER_REQUEST=10
+      - FFMPEG_PRESET=veryfast
+      - FFMPEG_CRF=28
     volumes:
       - ./output:/app/output
       - ./logs:/app/logs
@@ -43,15 +57,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 4G
-        reservations:
-          cpus: '1'
+          cpus: '1.5'
           memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     networks:
       - video_merger_network
 
